@@ -43,6 +43,7 @@ model Student {
   parent      Parent       @relation(fields: [parentId], references: [id])
   attendances Attendance[]
   grades      Grade[]
+  enrollments Enrollment[]
 }
 
 model Teacher {
@@ -73,6 +74,7 @@ model Class {
   teacher  Teacher   @relation(fields: [teacherId], references: [id])
   students Student[]
   subjects Subject[]
+  enrollments Enrollment[]
 }
 
 model Subject {
@@ -116,4 +118,25 @@ model Announcement {
   createdAt  DateTime @default(now())
 
   user User @relation(fields: [postedBy], references: [id])
+}
+model academicsession{
+  id Int @id@default(autoincrement())
+  name String @unique
+  startDate DateTime
+  enddate DateTime
+  isactive Boolean @default(false)
+  enrollments Enrollment[]
+}
+model Enrollment{
+  id Int @id@default(autoincrement())
+  studentId Int
+  classId Int
+  sessionId Int
+
+  student Student @relation(fields:[studentId],references:[id])
+  class Class @relation(fields:[classId],references:[id])
+  session academicsession @relation(fields:[sessionId],references:[id])
+
+  @@unique([studentId,sessionId])
+
 }
