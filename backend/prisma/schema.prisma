@@ -15,6 +15,12 @@ enum Role {
   PARENT
 }
 
+enum ExamType {
+  MID1
+  MID2
+  FINAL
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   name         String
@@ -42,7 +48,6 @@ model Student {
   class       Class        @relation(fields: [classId], references: [id])
   parent      Parent       @relation(fields: [parentId], references: [id])
   attendances Attendance[]
-  grades      Grade[]
   enrollments Enrollment[]
 }
 
@@ -56,6 +61,7 @@ model Teacher {
   user        User         @relation(fields: [userId], references: [id])
   classes     Class[]
   attendances Attendance[]
+  grades      Grade[]
 }
 
 model Parent {
@@ -92,21 +98,27 @@ model Attendance {
   date      DateTime
   status    String
   markedBy  Int
+  enroll_id Int?
 
   student Student @relation(fields: [studentId], references: [id])
   teacher Teacher @relation(fields: [markedBy], references: [id])
+  enrollment Enrollment? @relation(fields:[enroll_id],references:[id])
+  @@unique([enroll_id,date])
 }
 
 model Grade {
-  id        Int    @id @default(autoincrement())
-  studentId Int
-  subjectId Int
-  examName  String
-  marks     Float
-  term      String
+  id           Int      @id @default(autoincrement())
+  enrollmentId Int
+  subjectId    Int
+  examType     ExamType
+  marks        Float
+  markedBy     Int
 
-  student Student @relation(fields: [studentId], references: [id])
-  subject Subject @relation(fields: [subjectId], references: [id])
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+  subject    Subject    @relation(fields: [subjectId], references: [id])
+  teacher    Teacher    @relation(fields: [markedBy], references: [id])
+
+  @@unique([enrollmentId, subjectId, examType])
 }
 
 model Announcement {
@@ -136,6 +148,8 @@ model Enrollment{
   student Student @relation(fields:[studentId],references:[id])
   class Class @relation(fields:[classId],references:[id])
   session academicsession @relation(fields:[sessionId],references:[id])
+  attendances Attendance[]
+  grades Grade[]
 
   @@unique([studentId,sessionId])
 
