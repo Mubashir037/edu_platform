@@ -20,6 +20,9 @@ const login=async(req,res,next)=>{
                 message:"wrong password"
             });
         }
+        if (!user.isActive) {
+            return res.status(403).json({ message: "Account is inactive" });
+        }
         const token=jwt.sign(
             {id:user.id,role:user.role},process.env.JWT_SECRET,
             {

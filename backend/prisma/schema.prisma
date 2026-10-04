@@ -21,6 +21,13 @@ enum ExamType {
   FINAL
 }
 
+enum EnrollmentStatus {
+  ACTIVE
+  WITHDRAWN
+  COMPLETED
+  GRADUATED
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   name         String
@@ -28,6 +35,7 @@ model User {
   passwordHash String
   role         Role
   createdAt    DateTime @default(now())
+  isActive     Boolean  @default(true)
 
   student       Student?
   teacher       Teacher?
@@ -62,6 +70,7 @@ model Teacher {
   classes     Class[]
   attendances Attendance[]
   grades      Grade[]
+  subjects    Subject[]
 }
 
 model Parent {
@@ -87,8 +96,10 @@ model Subject {
   id      Int @id @default(autoincrement())
   name    String
   classId Int
+  teacherId Int?
 
   class  Class   @relation(fields: [classId], references: [id])
+  teacher Teacher? @relation(fields: [teacherId], references: [id], onDelete: Restrict)
   grades Grade[]
 }
 
@@ -137,6 +148,7 @@ model academicsession{
   startDate DateTime
   enddate DateTime
   isactive Boolean @default(false)
+  closedAt DateTime?
   enrollments Enrollment[]
 }
 model Enrollment{
@@ -144,6 +156,9 @@ model Enrollment{
   studentId Int
   classId Int
   sessionId Int
+  status EnrollmentStatus @default(ACTIVE)
+  withdrawnAt DateTime?
+  completedAt DateTime?
 
   student Student @relation(fields:[studentId],references:[id])
   class Class @relation(fields:[classId],references:[id])

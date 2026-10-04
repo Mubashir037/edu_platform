@@ -10,9 +10,12 @@ const create = async (req, res, next) => {
         }
         const { studentId, classId, sessionId } = result.data;
 
-        const student = await prisma.student.findUnique({ where: { id: studentId } });
+        const student = await prisma.student.findUnique({ where: { id: studentId }, include: { user: true } });
         if (!student) {
             return res.status(404).json({ msg: "Student not found" });
+        }
+        if (!student.user.isActive) {
+            return res.status(409).json({ msg: "Cannot enroll an inactive student" });
         }
         const schoolClass = await prisma.class.findUnique({ where: { id: classId } });
         if (!schoolClass) {
@@ -21,6 +24,9 @@ const create = async (req, res, next) => {
         const session = await prisma.academicsession.findUnique({ where: { id: sessionId } });
         if (!session) {
             return res.status(404).json({ msg: "Session not found" });
+        }
+        if (session.closedAt) {
+            return res.status(409).json({ msg: "Cannot enroll in a closed session" });
         }
         const existing = await prisma.enrollment.findFirst({
             where: { studentId: studentId, sessionId: sessionId }
@@ -86,9 +92,17 @@ const update = async (req, res, next) => {
             return res.status(400).json({ msg: "Provide only a valid classId to correct the enrollment" });
         }
         const { classId } = result.data;
-        const existing = await prisma.enrollment.findUnique({ where: { id: id } });
+        const existing = await prisma.enrollment.findUnique({ where: { id: id }, include: { session: true } });
         if (!existing) {
             return res.status(404).json({ msg: "Enrollment not found" });
+        }
+        if (existing.status !== "ACTIVE" || existing.session.closedAt) {
+            return res.status(409).json({ msg: "Historical enrollments cannot be changed" });
+        }
+        const attendanceCount = await prisma.attendance.count({ where: { enroll_id: id } });
+        const gradeCount = await prisma.grade.count({ where: { enrollmentId: id } });
+        if (attendanceCount > 0 || gradeCount > 0) {
+            return res.status(409).json({ msg: "Cannot change class after attendance or grades have been recorded" });
         }
         const schoolClass = await prisma.class.findUnique({ where: { id: classId } });
         if (!schoolClass) {
@@ -119,9 +133,12 @@ const delete_enrollment = async (req, res, next) => {
         if (!Number.isInteger(id) || id <= 0 || id > 2147483647) {
             return res.status(400).json({ msg: "Invalid enrollment ID" });
         }
-        const existing = await prisma.enrollment.findUnique({ where: { id: id } });
+        const existing = await prisma.enrollment.findUnique({ where: { id: id }, include: { session: true } });
         if (!existing) {
             return res.status(404).json({ msg: "Enrollment not found" });
+        }
+        if (existing.status !== "ACTIVE" || existing.session.closedAt) {
+            return res.status(409).json({ msg: "Historical enrollments cannot be deleted" });
         }
         await prisma.enrollment.delete({ where: { id: id } });
         return res.status(200).json({ msg: "Enrollment deleted" });

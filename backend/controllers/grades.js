@@ -40,13 +40,16 @@ const assign_grade = async (req, res, next) => {
                 id: enrollmentId
             },
             include: {
-                class: true
+                class: true, session: true, student: { include: { user: true } }
             }
         });
         if (!enrollment) {
             return res.status(404).json({
                 msg: "enrollment not found"
             })
+        }
+        if (enrollment.status !== "ACTIVE" || enrollment.session.closedAt || !enrollment.student.user.isActive) {
+            return res.status(409).json({ msg: "Cannot change marks for an inactive enrollment or closed session" });
         }
         const subject = await prisma.subject.findUnique({
             where: {
@@ -65,9 +68,9 @@ const assign_grade = async (req, res, next) => {
                 msg: "This subject does not belong to the student's enrolled class"
             });
         }
-        if (enrollment.class.teacherId !== teacher.id) {
+        if (subject.teacherId !== teacher.id) {
             return res.status(403).json({
-                msg: "You cannot enter marks for this class"
+                msg: "You can only enter marks for your assigned subject"
             });
         }
 
@@ -137,10 +140,13 @@ const update_grade = async (req, res, next) => {
         }
         const enrollment = await prisma.enrollment.findUnique({
             where: { id: grade.enrollmentId },
-            include: { class: true }
+            include: { class: true, session: true, student: { include: { user: true } } }
         });
         if (!enrollment) {
             return res.status(404).json({ msg: "Enrollment not found" });
+        }
+        if (enrollment.status !== "ACTIVE" || enrollment.session.closedAt || !enrollment.student.user.isActive) {
+            return res.status(409).json({ msg: "Cannot change marks for an inactive enrollment or closed session" });
         }
         const subject = await prisma.subject.findUnique({
             where: { id: grade.subjectId }
@@ -151,8 +157,8 @@ const update_grade = async (req, res, next) => {
         if (subject.classId !== enrollment.classId) {
             return res.status(400).json({ msg: "This subject does not belong to the student's enrolled class" });
         }
-        if (enrollment.class.teacherId !== teacher.id) {
-            return res.status(403).json({ msg: "You cannot update marks for this class" });
+        if (subject.teacherId !== teacher.id) {
+            return res.status(403).json({ msg: "You can only update marks for your assigned subject" });
         }
 
         const updated_grade = await prisma.grade.update({

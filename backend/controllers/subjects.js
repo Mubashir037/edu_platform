@@ -8,16 +8,20 @@ const create_subject = async (req, res, next) => {
     if (result.success === false) {
       return res.status(400).json({ msg: "Please enter valid subject details" });
     }
-    const { name, classId } = result.data;
+    const { name, classId, teacherId } = result.data;
     const schoolClass = await prisma.class.findUnique({ where: { id: classId } });
     if (!schoolClass) {
       return res.status(404).json({ msg: "Class not found" });
     }
-    const subject = await prisma.subject.create({ data: { name, classId } });
+    const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } });
+    if (!teacher) {
+      return res.status(404).json({ msg: "Teacher not found" });
+    }
+    const subject = await prisma.subject.create({ data: { name, classId, teacherId } });
     return res.status(201).json({ msg: "Subject created", subject });
   } catch (err) {
     if (err.code === "P2003") {
-      return res.status(409).json({ msg: "The linked class no longer exists" });
+      return res.status(409).json({ msg: "The linked class or teacher no longer exists" });
     }
     next(err);
   }
@@ -58,8 +62,8 @@ const update = async (req, res, next) => {
     if (result.success === false) {
       return res.status(400).json({ msg: "Please enter valid subject details" });
     }
-    const { name, classId } = result.data;
-    if (name === undefined && classId === undefined) {
+    const { name, classId, teacherId } = result.data;
+    if (name === undefined && classId === undefined && teacherId === undefined) {
       return res.status(400).json({ msg: "Provide at least one field to update" });
     }
     const existingSubject = await prisma.subject.findUnique({ where: { id } });
@@ -72,14 +76,21 @@ const update = async (req, res, next) => {
         return res.status(404).json({ msg: "Class not found" });
       }
     }
+    if (teacherId !== undefined) {
+      const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } });
+      if (!teacher) {
+        return res.status(404).json({ msg: "Teacher not found" });
+      }
+    }
     const subjectData = {};
     if (name !== undefined) subjectData.name = name;
     if (classId !== undefined) subjectData.classId = classId;
+    if (teacherId !== undefined) subjectData.teacherId = teacherId;
     const subject = await prisma.subject.update({ where: { id }, data: subjectData });
     return res.status(200).json({ msg: "Subject updated", subject });
   } catch (err) {
     if (err.code === "P2003") {
-      return res.status(409).json({ msg: "The linked class no longer exists" });
+      return res.status(409).json({ msg: "The linked class or teacher no longer exists" });
     }
     if (err.code === "P2025") {
       return res.status(404).json({ msg: "Subject not found" });

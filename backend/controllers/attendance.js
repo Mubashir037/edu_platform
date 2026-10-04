@@ -29,10 +29,13 @@ const markattandance = async (req, res, next) => {
         }
         const enrollment = await prisma.enrollment.findUnique({
             where: { id: enroll_id },
-            include: { class: true, session: true }
+            include: { class: true, session: true, student: { include: { user: true } } }
         });
         if (!enrollment) {
             return res.status(404).json({ msg: "Enrollment not found" });
+        }
+        if (enrollment.status !== "ACTIVE" || enrollment.session.closedAt || !enrollment.student.user.isActive) {
+            return res.status(409).json({ msg: "Cannot change attendance for an inactive enrollment or closed session" });
         }
         if (enrollment.class.teacherId !== teacher.id) {
             return res.status(403).json({ msg: "You can only mark attendance for your own class" });
@@ -186,7 +189,7 @@ const update_attendance = async (req, res, next) => {
         }
         const enrollment = await prisma.enrollment.findUnique({
             where: { id: attendance.enroll_id },
-            include: { class: true }
+            include: { class: true, session: true, student: { include: { user: true } } }
         });
         if (!enrollment) {
             return res.status(404).json({ msg: "Enrollment not found" });
@@ -196,6 +199,9 @@ const update_attendance = async (req, res, next) => {
         });
         if (!teacher) {
             return res.status(403).json({ msg: "Teacher profile not found" });
+        }
+        if (enrollment.status !== "ACTIVE" || enrollment.session.closedAt || !enrollment.student.user.isActive) {
+            return res.status(409).json({ msg: "Cannot change attendance for an inactive enrollment or closed session" });
         }
         if (enrollment.class.teacherId !== teacher.id) {
             return res.status(403).json({ msg: "You can only update attendance for your own class" });

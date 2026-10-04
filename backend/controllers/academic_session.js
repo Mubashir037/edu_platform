@@ -96,6 +96,9 @@ if (!Number.isInteger(id) || id <= 0) {
             });
 
         }
+        if (existing.closedAt) {
+            return res.status(409).json({ msg: "A closed session cannot be edited or reopened" });
+        }
         let data = {};
         if (name !== undefined) data.name = name;
         if (startDate !== undefined) data.startDate = startDate;
