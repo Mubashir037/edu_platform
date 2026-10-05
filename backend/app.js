@@ -13,6 +13,7 @@ const enrollmentRoutes = require("./routes/enrollment_route");
 const gradeRoutes = require("./routes/grades_route");
 const resultRoutes = require("./routes/result_route");
 const progressionRoutes = require("./routes/student_progression_route");
+const announcementRoutes = require("./routes/announcements_route");
 const cors = require("cors");
 require("dotenv").config();
 app.use(cors());
@@ -30,6 +31,7 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/grades", gradeRoutes);
 app.use("/api/results", resultRoutes);
 app.use("/api/progression", progressionRoutes);
+app.use("/api/announcements", announcementRoutes);
 app.listen(5000,()=>{
     console.log("server is being hit");
 })
