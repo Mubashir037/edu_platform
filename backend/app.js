@@ -1,5 +1,11 @@
+require("dotenv").config();
 const express=require("express");
+const { createServer } = require('http');
+const setupSocket = require('./config/socket');
 const app=express();
+const server = createServer(app);
+const io = setupSocket(server);
+app.set('io', io);
 const authRoutes = require("./routes/registerroute");
 const login=require("./routes/loginroute");
 const classRoutes = require("./routes/adminroute"); 
@@ -14,8 +20,8 @@ const gradeRoutes = require("./routes/grades_route");
 const resultRoutes = require("./routes/result_route");
 const progressionRoutes = require("./routes/student_progression_route");
 const announcementRoutes = require("./routes/announcements_route");
+const notificationRoutes = require("./routes/notifications_route");
 const cors = require("cors");
-require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
@@ -32,6 +38,7 @@ app.use("/api/grades", gradeRoutes);
 app.use("/api/results", resultRoutes);
 app.use("/api/progression", progressionRoutes);
 app.use("/api/announcements", announcementRoutes);
-app.listen(5000,()=>{
+app.use("/api/notifications", notificationRoutes);
+server.listen(5000,()=>{
     console.log("server is being hit");
 })

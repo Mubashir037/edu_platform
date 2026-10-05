@@ -41,6 +41,8 @@ model User {
   teacher       Teacher?
   parent        Parent?
   announcements Announcement[]
+  notificationsReceived Notification[] @relation("NotificationRecipient")
+  notificationsSent     Notification[] @relation("NotificationSender")
 }
 
 model Student {
@@ -142,6 +144,21 @@ model Announcement {
 
   user User @relation(fields: [postedBy], references: [id])
 }
+model Notification {
+  id          Int      @id @default(autoincrement())
+  recipientId Int
+  senderId    Int
+  title       String
+  body        String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  recipient User @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Restrict)
+  sender    User @relation("NotificationSender", fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([recipientId, createdAt])
+}
+
 model academicsession{
   id Int @id@default(autoincrement())
   name String @unique

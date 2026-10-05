@@ -138,4 +138,37 @@ const update_announcement = async (req, res, next) => {
     }
 };
 
-module.exports = { create_announcement, delete_announcement, update_announcement };
+// Public visitors can only read published notices.
+const get_all = async (req, res, next) => {
+    try {
+        const announcements = await prisma.announcement.findMany({
+            where: { isPublished: true },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }]
+        });
+        return res.status(200).json({ announcements });
+    }
+    catch (err) {
+        next(err);
+    }
+};
+
+const get_one = async (req, res, next) => {
+    try {
+        const ann_id = Number(req.params.id);
+        if (!Number.isInteger(ann_id) || ann_id <= 0 || ann_id > 2147483647) {
+            return res.status(400).json({ msg: "Invalid announcement ID" });
+        }
+        const announcement = await prisma.announcement.findFirst({
+            where: { id: ann_id, isPublished: true }
+        });
+        if (!announcement) {
+            return res.status(404).json({ msg: "Announcement not found" });
+        }
+        return res.status(200).json({ announcement });
+    }
+    catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { create_announcement, delete_announcement, update_announcement, get_all, get_one };
