@@ -137,7 +137,7 @@ model Announcement {
   title      String
   body       String
   postedBy   Int
-  targetRole Role
+  isPublished Boolean @default(false)
   createdAt  DateTime @default(now())
 
   user User @relation(fields: [postedBy], references: [id])
