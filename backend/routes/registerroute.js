@@ -5,5 +5,5 @@ const validate=require('../middleware/validate');
 
 const { registerSchema } = require('../schemas/authschema');
 
-router.post("/register", validate(registerSchema),register);
+router.post("/register", auth, role("ADMIN"), validate(registerSchema), register);
 module.exports=router;

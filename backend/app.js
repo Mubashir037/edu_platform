@@ -6,10 +6,13 @@ const app=express();
 const server = createServer(app);
 const io = setupSocket(server);
 app.set('io', io);
+app.use(require("./middleware/notfound"));
+app.use(require("./middleware/errorhandler"));
 const authRoutes = require("./routes/registerroute");
 const login=require("./routes/loginroute");
 const classRoutes = require("./routes/adminroute"); 
 const teacherRoutes = require("./routes/teacher_route");
+const galleryRoutes = require("./routes/gallery_route");
 const parentRoutes = require("./routes/parents_route");
 const studentRoutes = require("./routes/students_route");
 const subjectRoutes = require("./routes/subjects_route");
@@ -39,6 +42,7 @@ app.use("/api/results", resultRoutes);
 app.use("/api/progression", progressionRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/gallery", galleryRoutes);
 server.listen(5000,()=>{
     console.log("server is being hit");
 })
