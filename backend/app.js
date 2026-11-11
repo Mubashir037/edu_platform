@@ -24,6 +24,7 @@ const resultRoutes = require("./routes/result_route");
 const progressionRoutes = require("./routes/student_progression_route");
 const announcementRoutes = require("./routes/announcements_route");
 const notificationRoutes = require("./routes/notifications_route");
+const queryRoutes = require("./routes/query_route");
 const cors = require("cors");
 app.use(cors());
 app.use(express.json());
@@ -43,6 +44,7 @@ app.use("/api/progression", progressionRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/gallery", galleryRoutes);
+app.use("/api/queries", queryRoutes);
 server.listen(5000,()=>{
     console.log("server is being hit");
 })
