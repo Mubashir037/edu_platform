@@ -194,3 +194,21 @@ model GalleryImage {
   path      String   // storage path, needed for deleting
   createdAt DateTime @default(now())
 }
+enum QueryStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+model ContactQuery {
+  id        Int         @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  status    QueryStatus @default(NEW)
+  createdAt DateTime    @default(now())
+
+  @@index([status, createdAt])
+}
