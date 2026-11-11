@@ -170,5 +170,41 @@ const get_one = async (req, res, next) => {
         next(err);
     }
 };
+// Admin can see drafts and published notices.
+const admin_get_all = async (req, res, next) => {
+    try {
+        const where = {};
+        if (req.query.published === "true") where.isPublished = true;
+        if (req.query.published === "false") where.isPublished = false;
 
-module.exports = { create_announcement, delete_announcement, update_announcement, get_all, get_one };
+        const announcements = await prisma.announcement.findMany({
+            where,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }]
+        });
+        return res.status(200).json({ announcements });
+    }
+    catch (err) {
+        next(err);
+    }
+};
+
+const admin_get_one = async (req, res, next) => {
+    try {
+        const ann_id = Number(req.params.id);
+        if (!Number.isInteger(ann_id) || ann_id <= 0 || ann_id > 2147483647) {
+            return res.status(400).json({ msg: "Invalid announcement ID" });
+        }
+        const announcement = await prisma.announcement.findUnique({
+            where: { id: ann_id }
+        });
+        if (!announcement) {
+            return res.status(404).json({ msg: "Announcement not found" });
+        }
+        return res.status(200).json({ announcement });
+    }
+    catch (err) {
+        next(err);
+    }
+};
+module.exports = { create_announcement, delete_announcement, update_announcement, get_all, get_one, admin_get_all, admin_get_one };
+
