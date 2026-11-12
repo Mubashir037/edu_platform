@@ -26,6 +26,7 @@ const announcementRoutes = require("./routes/announcements_route");
 const notificationRoutes = require("./routes/notifications_route");
 const changePasswordRoutes = require("./routes/changepasswordroute");
 const queryRoutes = require("./routes/query_route");
+const passwordResetRoutes = require("./routes/changepasswordroute");
 const meRoutes = require("./routes/me_route");
 const cors = require("cors");
 app.use(cors());
@@ -48,6 +49,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/queries", queryRoutes);
 app.use("/api/me", meRoutes);
+app.use("/api/auth", passwordResetRoutes);
 app.use("/api/auth", changePasswordRoutes);
 server.listen(5000,()=>{
     console.log("server is being hit");
