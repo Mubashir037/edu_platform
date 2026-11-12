@@ -43,6 +43,7 @@ model User {
   announcements Announcement[]
   notificationsReceived Notification[] @relation("NotificationRecipient")
   notificationsSent     Notification[] @relation("NotificationSender")
+    passwordResetTokens PasswordResetToken[]
 }
 
 model Student {
@@ -211,4 +212,16 @@ model ContactQuery {
   createdAt DateTime    @default(now())
 
   @@index([status, createdAt])
+}
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
