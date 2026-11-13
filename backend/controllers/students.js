@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const studentSchema = require("../schemas/studentschema");
 const updateStudentSchema = studentSchema.partial();
 const userFields = { id: true, name: true, email: true, role: true };
-
+const { disconnectUser } = require('../config/socketutils');
 const create_student = async (req, res, next) => {
   try {
     const result = studentSchema.safeParse(req.body);
@@ -169,6 +169,7 @@ const deletestudent = async (req, res, next) => {
     }
     await prisma.student.delete({ where: { id } });
     await prisma.user.delete({ where: { id: student.userId } });
+    disconnectUser(req.app.get('io'), student.userId);
     return res.status(200).json({ msg: "Student and user account deleted" });
   } catch (err) {
     if (err.code === "P2003") {

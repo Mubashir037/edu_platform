@@ -2,6 +2,7 @@ const prisma = require("../config/prisma");
 const bcrypt = require("bcrypt");
 const teacherSchema = require("../schemas/teacherschema");
 const updateTeacherSchema = teacherSchema.partial();
+const { disconnectUser } = require('../config/socketutils');
 
 // Return profile details without exposing the password hash.
 const userFields = { id: true, name: true, email: true, role: true };
@@ -156,6 +157,7 @@ const deleteteacher = async (req, res, next) => {
     await prisma.user.delete({
       where: { id: teacher.userId }
     });
+    disconnectUser(req.app.get('io'), teacher.userId);
 
     return res.status(200).json({ msg: "Teacher and user account deleted" });
   } catch (err) {

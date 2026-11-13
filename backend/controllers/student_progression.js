@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 const { promoteSchema, graduateSchema } = require('../schemas/progressionschema');
-
+const { disconnectUser } = require('../config/socketutils');
 // Avoid overlapping progression requests in this running server.
 let processing = false;
 
@@ -66,6 +66,7 @@ const withdraw_student = async (req, res, next) => {
         }
         // Repeating the request can finish either step if the previous attempt failed.
         await prisma.user.update({ where: { id: enrollment.student.userId }, data: { isActive: false } });
+        disconnectUser(req.app.get('io'), enrollment.student.userId);
         if (enrollment.status === 'ACTIVE') {
             await prisma.enrollment.update({
                 where: { id }, data: { status: 'WITHDRAWN', withdrawnAt: new Date() }

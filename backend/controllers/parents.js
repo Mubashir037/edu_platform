@@ -2,7 +2,7 @@ const prisma = require("../config/prisma");
 const bcrypt = require("bcrypt");
 const parentSchema = require("../schemas/parentschema");
 const updateParentSchema = parentSchema.partial();
-
+const { disconnectUser } = require('../config/socketutils');
 // Only return these User fields, never the password hash.
 const userFields = { id: true, name: true, email: true, role: true };
 
@@ -133,6 +133,7 @@ const deleteparent = async (req, res, next) => {
 
     await prisma.parent.delete({ where: { id } });
     await prisma.user.delete({ where: { id: parent.userId } });
+    disconnectUser(req.app.get('io'), parent.userId);
     return res.status(200).json({ msg: "Parent and user account deleted" });
   } catch (err) {
     if (err.code === "P2025") {
