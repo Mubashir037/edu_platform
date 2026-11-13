@@ -51,11 +51,37 @@ const create = async (req, res, next) => {
     }
 };
 
-// Get all enrollments.
 const get_all = async (req, res, next) => {
     try {
-        const all_enrollments = await prisma.enrollment.findMany();
-        return res.status(200).json({ msg: "Got enrollments", all_enrollments });
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
+
+        const where = {};
+        const sessionId = Number(req.query.sessionId);
+        const classId = Number(req.query.classId);
+        if (Number.isInteger(sessionId) && sessionId > 0) where.sessionId = sessionId;
+        if (Number.isInteger(classId) && classId > 0) where.classId = classId;
+        if (["ACTIVE", "WITHDRAWN", "COMPLETED", "GRADUATED"].includes(req.query.status)) {
+            where.status = req.query.status;
+        }
+
+        const [all_enrollments, total] = await Promise.all([
+            prisma.enrollment.findMany({
+                where,
+                orderBy: { id: "asc" },
+                skip: (page - 1) * limit,
+                take: limit
+            }),
+            prisma.enrollment.count({ where })
+        ]);
+
+        return res.status(200).json({
+            msg: "Got enrollments",
+            all_enrollments,
+            total,
+            page,
+            pages: Math.ceil(total / limit)
+        });
     }
     catch (err) {
         next(err);

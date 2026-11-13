@@ -47,13 +47,33 @@ const create_student = async (req, res, next) => {
     next(err);
   }
 };
-
 const getall = async (req, res, next) => {
   try {
-    const all_students = await prisma.student.findMany({
-      include: { user: { select: userFields } }
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
+
+    const where = {};
+    const classId = Number(req.query.classId);
+    if (Number.isInteger(classId) && classId > 0) where.classId = classId;
+
+    const [all_students, total] = await Promise.all([
+      prisma.student.findMany({
+        where,
+        include: { user: { select: userFields } },
+        orderBy: { id: "asc" },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      prisma.student.count({ where })
+    ]);
+
+    return res.status(200).json({
+      msg: "Students retrieved",
+      all_students,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
     });
-    return res.status(200).json({ msg: "Students retrieved", all_students });
   } catch (err) {
     next(err);
   }
