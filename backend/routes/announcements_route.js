@@ -1,17 +1,22 @@
+
+
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
 const validate = require('../middleware/validate');
-const { bulkNotificationSchema } = require('../schemas/notificationschema');
+const announcementSchema = require('../schemas/announcementschema');
 const {
-  create_notification, get_my_notifications, mark_as_read, get_unread_count, create_bulk_notification
-} = require('../controllers/notifications');
+  create_announcement, delete_announcement, update_announcement,
+  get_all, get_one, admin_get_all, admin_get_one
+} = require('../controllers/public_announcements');
 
-router.post('/', auth, role('ADMIN'), create_notification);
-router.post('/bulk', auth, role('ADMIN'), validate(bulkNotificationSchema), create_bulk_notification);
-router.get('/', auth, get_my_notifications);
-router.get('/unread-count', auth, get_unread_count);
-router.patch('/:id/read', auth, mark_as_read);
+router.get('/', get_all);                                   // public
+router.get('/admin/all', auth, role('ADMIN'), admin_get_all);
+router.get('/admin/:id', auth, role('ADMIN'), admin_get_one);
+router.get('/:id', get_one);                                // public
+router.post('/', auth, role('ADMIN'), validate(announcementSchema), create_announcement);
+router.patch('/:id', auth, role('ADMIN'), validate(announcementSchema.partial()), update_announcement);
+router.delete('/:id', auth, role('ADMIN'), delete_announcement);
 
 module.exports = router;
