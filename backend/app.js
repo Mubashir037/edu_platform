@@ -24,7 +24,7 @@ const announcementRoutes = require("./routes/announcements_route");
 const notificationRoutes = require("./routes/notifications_route");
 const changePasswordRoutes = require("./routes/changepasswordroute");
 const queryRoutes = require("./routes/query_route");
-const passwordResetRoutes = require("./routes/changepasswordroute");
+const passwordResetRoutes = require("./routes/passwordresetroute");
 const meRoutes = require("./routes/me_route");
 const cors = require("cors");
 app.use(cors());
