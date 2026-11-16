@@ -23,14 +23,9 @@ const create_session = async (req, res, next) => {
             });
 
         }
-        await prisma.academicsession.create({
-            data: {
-                name, startDate, enddate, isactive
-            }
-        })
-        res.status(200).json({
-            msg: "created session"
-        });
+        const session = await prisma.academicsession.create({ data: { name, startDate, enddate, isactive } });
+res.status(201).json({ msg: "created session", session });
+        
     }
     catch (err) {
         next(err)
