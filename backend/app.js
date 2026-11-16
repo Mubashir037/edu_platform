@@ -6,8 +6,6 @@ const app=express();
 const server = createServer(app);
 const io = setupSocket(server);
 app.set('io', io);
-app.use(require("./middleware/notfound"));
-app.use(require("./middleware/errorhandler"));
 const authRoutes = require("./routes/registerroute");
 const login=require("./routes/loginroute");
 const classRoutes = require("./routes/adminroute"); 
@@ -51,6 +49,8 @@ app.use("/api/queries", queryRoutes);
 app.use("/api/me", meRoutes);
 app.use("/api/auth", passwordResetRoutes);
 app.use("/api/auth", changePasswordRoutes);
+app.use(require("./middleware/notfound"));
+app.use(require("./middleware/errorhandler"));
 server.listen(5000,()=>{
     console.log("server is being hit");
 })
