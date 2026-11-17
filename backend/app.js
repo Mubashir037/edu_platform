@@ -51,6 +51,7 @@ app.use("/api/auth", passwordResetRoutes);
 app.use("/api/auth", changePasswordRoutes);
 app.use(require("./middleware/notfound"));
 app.use(require("./middleware/errorhandler"));
-server.listen(5000,()=>{
-    console.log("server is being hit");
-})
+module.exports = { app, server };
+// server.listen(5000,()=>{
+//     console.log("server is being hit");
+// })
