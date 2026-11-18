@@ -1,35 +1,25 @@
-const { login, get, post } = require("./helpers");
+const { setupWorld, cleanupWorld, call } = require("./fixtures");
+const prisma = require("../config/prisma");
 
-let admin, teacherA, student1, parent1;
-
-beforeAll(async () => {
-  admin = await login(process.env.ADMIN_EMAIL, process.env.ADMIN_PASSWORD);
-  teacherA = await login("teachera@test.com", "123456");
-  student1 = await login("student1@test.com", "123456");
-  parent1 = await login("parent1@test.com", "123456");
-});
+let w, t;
+beforeAll(async () => { w = await setupWorld(); t = w.tokens; }, 60000);
+afterAll(async () => { await cleanupWorld(w); await prisma.$disconnect(); }, 60000);
 
 describe("Role access", () => {
   test("no token on a protected route is 401", async () => {
-    expect((await get("/api/students")).status).toBe(401);
+    expect((await call("get", "/api/students")).status).toBe(401);
   });
-
   test("teacher cannot create a teacher", async () => {
-    const res = await post("/api/teachers", {}, teacherA);
-    expect(res.status).toBe(403);
+    expect((await call("post", "/api/teachers", t.teacherA, {})).status).toBe(403);
   });
-
   test("teacher cannot register users", async () => {
-    const res = await post("/api/auth/register", {}, teacherA);
-    expect(res.status).toBe(403);
+    expect((await call("post", "/api/auth/register", t.teacherA, {})).status).toBe(403);
   });
-
   test("student cannot list students", async () => {
-    expect((await get("/api/students", student1)).status).toBe(403);
+    expect((await call("get", "/api/students", t.student1)).status).toBe(403);
   });
-
   test("admin can list students, with paging fields", async () => {
-    const res = await get("/api/students?page=1&limit=1", admin);
+    const res = await call("get", "/api/students?page=1&limit=1", t.admin);
     expect(res.status).toBe(200);
     expect(res.body.all_students.length).toBe(1);
     expect(res.body.total).toBeGreaterThan(0);
@@ -39,17 +29,15 @@ describe("Role access", () => {
 
 describe("/api/me", () => {
   test("student sees STUDENT role", async () => {
-    const res = await get("/api/me", student1);
+    const res = await call("get", "/api/me", t.student1);
     expect(res.status).toBe(200);
     expect(res.body.role).toBe("STUDENT");
   });
-
   test("student cannot use teacher lookup", async () => {
-    expect((await get("/api/me/subjects", student1)).status).toBe(403);
+    expect((await call("get", "/api/me/subjects", t.student1)).status).toBe(403);
   });
-
   test("parent sees only their own child", async () => {
-    const res = await get("/api/me/children", parent1);
+    const res = await call("get", "/api/me/children", t.parent1);
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(1);
   });
